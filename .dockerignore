@@ -1,0 +1,8 @@
+.DS_Store
+compose
+keys
+node_modules
+nodes
+posdao-contracts
+scripts/set-env.sh
+TODO.txt

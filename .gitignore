@@ -1,0 +1,8 @@
+.DS_Store
+.env
+compose/nodes
+keys
+node_modules
+nodes
+scripts/set-env.sh
+TODO.txt

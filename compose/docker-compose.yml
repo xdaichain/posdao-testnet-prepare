@@ -1,0 +1,20 @@
+version: '3.7'
+services:
+  testnetprep:
+    init: true
+    image: xdaichain/posdao-testnet-prepare:latest
+    container_name: testnetprep
+    environment:
+      NETWORK_NAME: "${NETWORK_NAME}"
+      NETWORK_ID: "${NETWORK_ID}"
+      OWNER_BALANCE: "${OWNER_BALANCE}"
+      DELEGATOR_MIN_STAKE: "${DELEGATOR_MIN_STAKE}"
+      CANDIDATE_MIN_STAKE: "${CANDIDATE_MIN_STAKE}"
+      VALIDATORS_NUMBER: "${VALIDATORS_NUMBER}"
+      SEQAPIKEY: "${SEQAPIKEY}"
+    volumes:
+      - ./nodes:/testnet/nodes
+    logging:
+      options:
+        max-size: "1m"
+        max-file: "10"

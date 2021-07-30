@@ -1,0 +1,26 @@
+{
+  "name": "posdao-testnet-prepare",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "before-start": "npm i && npm run get-all-submodules && npm run prepare-env",
+    "start": "npm run before-start && npm run make-spec && npm run start-preparation",
+    "get-all-submodules": "git submodule update --init --remote",
+    "make-spec": ". ./scripts/set-env.sh && cd ./posdao-contracts && npm i && node ./scripts/make_spec.js",
+    "prepare-env": "node ./scripts/prepare-env.js",
+    "start-preparation": "node ./scripts/start-preparation.js",
+    "cleanup": "rm -f ./scripts/set-env.sh ./posdao-contracts/spec.json && rm -rf ./keys ./nodes ./compose/nodes"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xdaichain/posdao-testnet-prepare.git"
+  },
+  "author": "poa.network",
+  "license": "ISC",
+  "dependencies": {
+    "generate-password": "1.6.1",
+    "hex-generator": "1.0.1",
+    "public-ip": "4.0.4",
+    "web3": "1.4.0"
+  }
+}
