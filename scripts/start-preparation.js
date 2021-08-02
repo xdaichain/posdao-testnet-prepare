@@ -223,4 +223,15 @@ done
 cd ./archive; docker-compose up -d; cd -
   `.trim();
   fs.writeFileSync(`${nodesDirectory}/run_all.sh`, runAllShContent, 'utf8');
+
+  // Make `nodes/stop_all.sh` script
+  const stopAllShContent = `
+#!/bin/bash
+cd ./ethstats; docker-compose down; cd -
+for i in $(seq 1 ${miningAddresses.length}); do
+  cd ./validator$\{i\}; docker-compose down; cd -
+done
+cd ./archive; docker-compose down; cd -
+  `.trim();
+  fs.writeFileSync(`${nodesDirectory}/stop_all.sh`, stopAllShContent, 'utf8');
 }
