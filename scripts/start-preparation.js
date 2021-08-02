@@ -94,6 +94,7 @@ services:
     container_name: ${networkName}-validator${n+1}
     image: nethermind/nethermind:latest
     environment:
+      NETHERMIND_AURACONFIG_ALLOWAURAPRIVATECHAINS: "true"
       NETHERMIND_AURACONFIG_FORCESEALING: "true"
       NETHERMIND_AURACONFIG_TXPRIORITYCONTRACTADDRESS: "0x4100000000000000000000000000000000000000"
       NETHERMIND_ETHSTATSCONFIG_ENABLED: "true"
@@ -157,6 +158,7 @@ services:
     container_name: ${networkName}-archive
     image: nethermind/nethermind:latest
     environment:
+      NETHERMIND_AURACONFIG_ALLOWAURAPRIVATECHAINS: "true"
       NETHERMIND_ETHSTATSCONFIG_ENABLED: "true"
       NETHERMIND_ETHSTATSCONFIG_CONTACT: "security@poanetwork.com"
       NETHERMIND_ETHSTATSCONFIG_NAME: "${archiveEthstatsName}"
@@ -210,12 +212,15 @@ services:
   // Make `nodes/run_all.sh` script
   const runAllShContent = `
 #!/bin/bash
+docker pull poanetwork/ethstats:latest
+docker pull nethermind/nethermind:latest
 cd ./ethstats; docker-compose up -d; cd -
 sleep 5
 for i in $(seq 1 ${miningAddresses.length}); do
   cd ./validator$\{i\}; docker-compose up -d; cd -
   sleep 3
 done
+cd ./archive; docker-compose up -d; cd -
   `.trim();
   fs.writeFileSync(`${nodesDirectory}/run_all.sh`, runAllShContent, 'utf8');
 }
