@@ -58,7 +58,7 @@ version: '3.7'
 services:
   ethstats:
     init: true
-    image: poanetwork/ethstats:latest
+    image: swarmpit/ethstats:latest
     container_name: ethstats
     restart: always
     environment:
