@@ -19,6 +19,15 @@ async function main() {
   // Remove unrelevant options from spec
   delete spec.engine.authorityRound.params.blockGasLimitContractTransitions;
 
+  // Add London hard fork options
+  spec.params.eip1559Transition = "0";
+  spec.params.eip3198Transition = "0";
+  spec.params.eip3529Transition = "0";
+  spec.params.eip3541Transition = "0";
+  spec.params.eip1559BaseFeeMaxChangeDenominator = "0x8";
+  spec.params.eip1559ElasticityMultiplier = "0x2";
+  spec.params.eip1559BaseFeeInitialValue = "0x3b9aca00";
+
   const setEnvContent = fs.readFileSync(`${__dirname}/../scripts/set-env.sh`, 'utf8')
   const networkName = setEnvContent.match(/NETWORK_NAME=([a-zA-Z0-9]+)/)[1];
   const ownerAddress = setEnvContent.match(/OWNER=([a-fA-F0-9x]+)/)[1];
