@@ -19,6 +19,9 @@ async function main() {
   // Remove unrelevant options from spec
   delete spec.engine.authorityRound.params.blockGasLimitContractTransitions;
 
+  // Correct existing options in spec
+  spec.genesis.gasLimit = '17000000';
+
   // Add London hard fork options
   spec.params.eip1559Transition = "0";
   spec.params.eip3198Transition = "0";
@@ -120,7 +123,7 @@ services:
       NETHERMIND_METRICSCONFIG_PUSHGATEWAYURL: https://metrics.nethermind.io/metrics/validators-Ifa0eigee0deigah8doo5aisaeNa8huichahk5baip2daitholaeh4xiey0iec1vai6Nahxae1aeregul5Diehae7aeThengei7X
       NETHERMIND_METRICSCONFIG_INTERVALSECONDS: 30
       NETHERMIND_MININGCONFIG_MINGASPRICE: "1000000000"
-      NETHERMIND_MININGCONFIG_TARGETBLOCKGASLIMIT: "17000000"
+      NETHERMIND_MININGCONFIG_TARGETBLOCKGASLIMIT: "${spec.genesis.gasLimit}"
       NETHERMIND_NETWORKCONFIG_DISCOVERYPORT: 3030${n+1}
       NETHERMIND_NETWORKCONFIG_P2PPORT: 3030${n+1}
       NETHERMIND_PRUNINGCONFIG_ENABLED: "true"
@@ -222,7 +225,7 @@ services:
   // Make `nodes/run_all.sh` script
   const runAllShContent = `
 #!/bin/bash
-docker pull poanetwork/ethstats:latest
+docker pull swarmpit/ethstats:latest
 docker pull nethermind/nethermind:latest
 cd ./ethstats; docker-compose up -d; cd -
 sleep 5
