@@ -21,6 +21,7 @@
     "generate-password": "1.6.1",
     "hex-generator": "1.0.1",
     "public-ip": "4.0.4",
+    "solc": "0.5.10",
     "web3": "1.4.0"
   }
 }

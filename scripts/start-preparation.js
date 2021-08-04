@@ -7,12 +7,65 @@ const pwdgen = require('generate-password');
 const hexgen = require('hex-generator');
 const publicIp = require('public-ip');
 const secp256k1 = require('secp256k1');
+const solc = require('solc');
 const Web3 = require('web3');
 const web3 = new Web3();
+const BN = web3.utils.BN;
+
+const nodesDirectory = `${__dirname}/../nodes`;
+const nodesSpecFilePath = `${nodesDirectory}/spec.json`;
 
 main();
 
+async function deployStakingToken() {
+  let spec = fs.readFileSync(nodesSpecFilePath, 'utf8');
+  spec = JSON.parse(spec);
+  const validatorSetAuRaAddress = spec.engine.authorityRound.params.validators.multi.0.contract;
+  const validatorSetAuRaContract = new web3.eth.Contract([{"constant":true,"inputs":[],"name":"stakingContract","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}], validatorSetAuRaAddress);
+  const stakingAuRaAddress = await validatorSetAuRaContract.methods.stakingContract().call();
+  const stakingAuRaContract = new web3.eth.Contract([{"constant":true,"inputs":[],"name":"erc677TokenContract","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"stakingEpoch","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}], stakingAuRaAddress);
+  const stakingTokenAddress = await stakingAuRaContract.methods.erc677TokenContract().call();
+  const stakingEpoch = new BN(await stakingAuRaContract.methods.stakingEpoch().call());
+  if (stakingTokenAddress == '0x0000000000000000000000000000000000000000' && stakingEpoch.isZero()) {
+    // Deploy staking token contract and make initial stakes
+    // TODO
+  } else if (stakingTokenAddress != '0x0000000000000000000000000000000000000000') {
+    console.log('The staking token is already deployed, so we won\'t do any actions');
+  } else if (!stakingEpoch.isZero()) {
+    console.log('The number of the current staking epoch is not zero, so it is too late to make initial stakes');
+  }
+}
+
+function compileStakingTokenContract() {
+  let input = {
+    language: 'Solidity',
+    sources: {
+      'token.sol': {
+        content: fs.readFileSync(`${__dirname}/../posdao-contracts/contracts/ERC677BridgeTokenRewardable.sol`, 'utf8'),
+      },
+    },
+    settings: {
+      outputSelection: {
+        '*': {
+          '*': ['*'],
+        },
+      },
+    },
+  };
+  let compiledContract = JSON.parse( solc.compile(JSON.stringify(input)) );
+  return compiledContract.contracts['token.sol']['ERC677BridgeTokenRewardable'];
+}
+
 async function main() {
+  const externalIP = await publicIp.v4();
+
+  if (fs.existsSync(nodesSpecFilePath)) {
+    console.log('spec.json file already exists, so we are trying to deploy staking token contract and make initial stakes if needed...');
+    web3.setProvider(`http://${externalIP}:8545`);
+    await deployStakingToken();
+    return;
+  }
+
   let spec = fs.readFileSync(`${__dirname}/../posdao-contracts/spec.json`, 'utf8');
   spec = JSON.parse(spec);
 
@@ -38,7 +91,6 @@ async function main() {
 
   // Generate Enode URLs
   spec.nodes = [];
-  const externalIP = await publicIp.v4();
   for (let n = 0; n <= miningAddresses.length; n++) {
     const address = (n == 0) ? ownerAddress : miningAddresses[n - 1];
     const privateKey = fs.readFileSync(`${__dirname}/../keys/${address}`, 'utf8');
@@ -48,13 +100,11 @@ async function main() {
     spec.nodes.push(enodeURL);
   }
 
-  const nodesDirectory = `${__dirname}/../nodes`;
-
   // Save spec to file
   try {
     fs.mkdirSync(nodesDirectory);
   } catch (e) {}
-  fs.writeFileSync(`${nodesDirectory}/spec.json`, JSON.stringify(spec, null, '  '), 'utf8');
+  fs.writeFileSync(nodesSpecFilePath, JSON.stringify(spec, null, '  '), 'utf8');
 
   // Prepare docker-compose.yml for Netstat
   const ETHSTATS_SECRET = pwdgen.generate({ length: 10, numbers: true });
