@@ -181,12 +181,12 @@ services:
       NETHERMIND_INITCONFIG_STORERECEIPTS: "true"
       NETHERMIND_INITCONFIG_WEBSOCKETSENABLED: "true"
       NETHERMIND_JSONRPCCONFIG_ENABLED: "true"
+      NETHERMIND_JSONRPCCONFIG_ENABLEDMODULES: "[Eth,Subscribe,Web3,Net,Parity]"
       NETHERMIND_JSONRPCCONFIG_HOST: 0.0.0.0
       NETHERMIND_JSONRPCCONFIG_PORT: 8545
       NETHERMIND_JSONRPCCONFIG_REPORTINTERVALSECONDS: 600
       NETHERMIND_JSONRPCCONFIG_WEBSOCKETSPORT: 8546
-      NETHERMIND_KEYSTORECONFIG_ENODEACCOUNT: "${ownerAddress}"
-      NETHERMIND_KEYSTORECONFIG_TESTNODEKEY: "${ownerPrivateKey}"
+      NETHERMIND_KEYSTORECONFIG_ENODEKEYFILE: "/nethermind/enode.key"
       NETHERMIND_METRICSCONFIG_ENABLED: "true"
       NETHERMIND_METRICSCONFIG_INTERVALSECONDS: 30
       NETHERMIND_METRICSCONFIG_NODENAME: "${archiveEthstatsName}"
@@ -207,6 +207,7 @@ services:
       - ./data/logs:/nethermind/logs
       - ./data/keystore:/nethermind/keystore
       - ./data/nethermind_db:/nethermind/nethermind_db
+      - ./enode.key:/nethermind/enode.key:ro
     ports:
       - "8545:8545"
       - "8546:8546"
@@ -221,6 +222,7 @@ services:
   `.trim();
 
   fs.writeFileSync(`${archiveNodeDirectory}/docker-compose.yml`, archiveNodeYmlContent, 'utf8');
+  fs.writeFileSync(`${archiveNodeDirectory}/enode.key`, Buffer.from(ownerPrivateKey, 'hex'), 'binary');
 
   // Make `nodes/run_all.sh` script
   const runAllShContent = `
