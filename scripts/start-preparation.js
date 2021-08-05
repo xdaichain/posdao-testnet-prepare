@@ -320,6 +320,7 @@ async function deployStakingToken(ownerAddress) {
     // Call StakingTokenContract.setStakingContract()
     const stakingTokenContract = new web3.eth.Contract([{"constant":false,"inputs":[{"name":"_stakingContract","type":"address"}],"name":"setStakingContract","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_blockRewardContract","type":"address"}],"name":"setBlockRewardContract","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}], receipt.contractAddress);
     signedTx = await web3.eth.accounts.signTransaction({
+      to: stakingTokenContract.options.address,
       data: stakingTokenContract.methods.setStakingContract(stakingAuRaAddress).encodeABI(),
       gasPrice: web3.utils.numberToHex('0'),
       gas: web3.utils.numberToHex('2000000'),
@@ -333,6 +334,7 @@ async function deployStakingToken(ownerAddress) {
 
     // Call StakingTokenContract.setBlockRewardContract()
     signedTx = await web3.eth.accounts.signTransaction({
+      to: stakingTokenContract.options.address,
       data: stakingTokenContract.methods.setBlockRewardContract(blockRewardAuRaAddress).encodeABI(),
       gasPrice: web3.utils.numberToHex('0'),
       gas: web3.utils.numberToHex('2000000'),
@@ -346,6 +348,7 @@ async function deployStakingToken(ownerAddress) {
 
     // Call StakingAuRa.setErc677TokenContract()
     signedTx = await web3.eth.accounts.signTransaction({
+      to: stakingAuRaContract.options.address,
       data: stakingAuRaContract.methods.setErc677TokenContract(stakingTokenContract.options.address).encodeABI(),
       gasPrice: web3.utils.numberToHex('0'),
       gas: web3.utils.numberToHex('2000000'),
@@ -361,6 +364,7 @@ async function deployStakingToken(ownerAddress) {
     const miningAddresses = validatorSetAuRaContract.methods.getValidators().call();
     const mintAmount = candidateMinStake.mul(new BN(miningAddresses.length));
     signedTx = await web3.eth.accounts.signTransaction({
+      to: stakingTokenContract.options.address,
       data: stakingTokenContract.methods.mint(stakingAuRaAddress, mintAmount).encodeABI(),
       gasPrice: web3.utils.numberToHex('0'),
       gas: web3.utils.numberToHex('2000000'),
@@ -374,6 +378,7 @@ async function deployStakingToken(ownerAddress) {
 
     // Call StakingAuRa.initialValidatorStake()
     signedTx = await web3.eth.accounts.signTransaction({
+      to: stakingAuRaContract.options.address,
       data: stakingAuRaContract.methods.initialValidatorStake(mintAmount).encodeABI(),
       gasPrice: web3.utils.numberToHex('0'),
       gas: web3.utils.numberToHex('2000000'),
