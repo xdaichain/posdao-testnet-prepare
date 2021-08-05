@@ -17,10 +17,10 @@ const nodesSpecFilePath = `${nodesDirectory}/spec.json`;
 
 main();
 
-async function deployStakingToken() {
+async function deployStakingToken(ownerAddress) {
   let spec = fs.readFileSync(nodesSpecFilePath, 'utf8');
   spec = JSON.parse(spec);
-  const validatorSetAuRaAddress = spec.engine.authorityRound.params.validators.multi.0.contract;
+  const validatorSetAuRaAddress = spec.engine.authorityRound.params.validators.multi["0"].contract;
   const validatorSetAuRaContract = new web3.eth.Contract([{"constant":true,"inputs":[],"name":"stakingContract","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}], validatorSetAuRaAddress);
   const stakingAuRaAddress = await validatorSetAuRaContract.methods.stakingContract().call();
   const stakingAuRaContract = new web3.eth.Contract([{"constant":true,"inputs":[],"name":"erc677TokenContract","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"stakingEpoch","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}], stakingAuRaAddress);
@@ -28,7 +28,28 @@ async function deployStakingToken() {
   const stakingEpoch = new BN(await stakingAuRaContract.methods.stakingEpoch().call());
   if (stakingTokenAddress == '0x0000000000000000000000000000000000000000' && stakingEpoch.isZero()) {
     // Deploy staking token contract and make initial stakes
-    // TODO
+    const compiledContract = compileStakingTokenContract();
+    const abi = compiledContract.abi;
+    const bytecode = compiledContract.evm.bytecode.object;
+    const contract = new web3.eth.Contract(abi);
+    const netId = await web3.eth.getChainId();
+    const data = await contract
+      .deploy({
+          data: '0x' + bytecode,
+          arguments: ['STAKE', 'STAKE', 18, netId],
+      })
+      .encodeABI();
+    const ownerPrivateKey = fs.readFileSync(`${__dirname}/../keys/${ownerAddress}`, 'utf8');
+
+    const signedTx = await web3.eth.accounts.signTransaction({
+      data,
+      gasPrice: web3.utils.numberToHex('0'),
+      gas: web3.utils.numberToHex('4700000'),
+    }, `0x${ownerPrivateKey}`);
+
+    const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+    console.log(`Staking token contract is deployed and has the address ${receipt.contractAddress}`);
   } else if (stakingTokenAddress != '0x0000000000000000000000000000000000000000') {
     console.log('The staking token is already deployed, so we won\'t do any actions');
   } else if (!stakingEpoch.isZero()) {
@@ -36,33 +57,17 @@ async function deployStakingToken() {
   }
 }
 
-function compileStakingTokenContract() {
-  let input = {
-    language: 'Solidity',
-    sources: {
-      'token.sol': {
-        content: fs.readFileSync(`${__dirname}/../posdao-contracts/contracts/ERC677BridgeTokenRewardable.sol`, 'utf8'),
-      },
-    },
-    settings: {
-      outputSelection: {
-        '*': {
-          '*': ['*'],
-        },
-      },
-    },
-  };
-  let compiledContract = JSON.parse( solc.compile(JSON.stringify(input)) );
-  return compiledContract.contracts['token.sol']['ERC677BridgeTokenRewardable'];
-}
-
 async function main() {
   const externalIP = await publicIp.v4();
+  const setEnvContent = fs.readFileSync(`${__dirname}/../scripts/set-env.sh`, 'utf8')
+  const networkName = setEnvContent.match(/NETWORK_NAME=([a-zA-Z0-9]+)/)[1];
+  const ownerAddress = setEnvContent.match(/OWNER=([a-fA-F0-9x]+)/)[1];
+  const miningAddresses = setEnvContent.match(/INITIAL_VALIDATORS=([a-fA-F0-9x,]+)/)[1].split(',');
 
   if (fs.existsSync(nodesSpecFilePath)) {
     console.log('spec.json file already exists, so we are trying to deploy staking token contract and make initial stakes if needed...');
     web3.setProvider(`http://${externalIP}:8545`);
-    await deployStakingToken();
+    await deployStakingToken(ownerAddress);
     return;
   }
 
@@ -83,11 +88,6 @@ async function main() {
   spec.params.eip1559BaseFeeMaxChangeDenominator = "0x8";
   spec.params.eip1559ElasticityMultiplier = "0x2";
   spec.params.eip1559BaseFeeInitialValue = "0x3b9aca00";
-
-  const setEnvContent = fs.readFileSync(`${__dirname}/../scripts/set-env.sh`, 'utf8')
-  const networkName = setEnvContent.match(/NETWORK_NAME=([a-zA-Z0-9]+)/)[1];
-  const ownerAddress = setEnvContent.match(/OWNER=([a-fA-F0-9x]+)/)[1];
-  const miningAddresses = setEnvContent.match(/INITIAL_VALIDATORS=([a-fA-F0-9x,]+)/)[1].split(',');
 
   // Generate Enode URLs
   spec.nodes = [];
@@ -299,4 +299,24 @@ done
 cd ./archive; docker-compose down; cd -
   `.trim();
   fs.writeFileSync(`${nodesDirectory}/stop_all.sh`, stopAllShContent, 'utf8');
+}
+
+function compileStakingTokenContract() {
+  let input = {
+    language: 'Solidity',
+    sources: {
+      'token.sol': {
+        content: fs.readFileSync(`${__dirname}/../posdao-contracts/contracts/ERC677BridgeTokenRewardable.sol`, 'utf8'),
+      },
+    },
+    settings: {
+      outputSelection: {
+        '*': {
+          '*': ['*'],
+        },
+      },
+    },
+  };
+  let compiledContract = JSON.parse( solc.compile(JSON.stringify(input)) );
+  return compiledContract.contracts['token.sol']['ERC677BridgeTokenRewardable'];
 }
