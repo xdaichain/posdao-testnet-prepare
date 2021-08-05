@@ -380,8 +380,8 @@ async function deployStakingToken(ownerAddress) {
     signedTx = await web3.eth.accounts.signTransaction({
       to: stakingAuRaContract.options.address,
       data: stakingAuRaContract.methods.initialValidatorStake(mintAmount).encodeABI(),
-      gasPrice: web3.utils.numberToHex('0'),
-      gas: web3.utils.numberToHex('2000000'),
+      gasPrice: '20000000000',
+      gas: web3.utils.numberToHex('8000000'),
     }, `0x${ownerPrivateKey}`);
     receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
     if (receipt.status !== true) {
