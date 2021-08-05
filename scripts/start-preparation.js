@@ -318,7 +318,7 @@ async function deployStakingToken(ownerAddress) {
     console.log(`Staking token contract is deployed and has the address ${receipt.contractAddress}`);
 
     // Call StakingTokenContract.setStakingContract()
-    const stakingTokenContract = new web3.eth.Contract([{"constant":false,"inputs":[{"name":"_stakingContract","type":"address"}],"name":"setStakingContract","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_blockRewardContract","type":"address"}],"name":"setBlockRewardContract","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}], receipt.contractAddress);
+    const stakingTokenContract = new web3.eth.Contract([{"constant":false,"inputs":[{"name":"_stakingContract","type":"address"}],"name":"setStakingContract","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_blockRewardContract","type":"address"}],"name":"setBlockRewardContract","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_amount","type":"uint256"}],"name":"mint","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"}], receipt.contractAddress);
     signedTx = await web3.eth.accounts.signTransaction({
       to: stakingTokenContract.options.address,
       data: stakingTokenContract.methods.setStakingContract(stakingAuRaAddress).encodeABI(),
