@@ -12,9 +12,13 @@ main();
 
 async function main() {
   const setEnvFilepath = `${__dirname}/../scripts/set-env.sh`;
+  const nodesSpecFilePath = `${__dirname}/../nodes/spec.json`;
 
   if (fs.existsSync(setEnvFilepath)) {
     console.log('set-env.sh already exists. Skipping this step');
+    return;
+  } else if (fs.existsSync(nodesSpecFilePath)) {
+    console.log('spec.json already exists. Skipping this step');
     return;
   }
 

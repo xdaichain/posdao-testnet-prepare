@@ -17,46 +17,6 @@ const nodesSpecFilePath = `${nodesDirectory}/spec.json`;
 
 main();
 
-async function deployStakingToken(ownerAddress) {
-  let spec = fs.readFileSync(nodesSpecFilePath, 'utf8');
-  spec = JSON.parse(spec);
-  const validatorSetAuRaAddress = spec.engine.authorityRound.params.validators.multi["0"].contract;
-  const validatorSetAuRaContract = new web3.eth.Contract([{"constant":true,"inputs":[],"name":"stakingContract","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}], validatorSetAuRaAddress);
-  const stakingAuRaAddress = await validatorSetAuRaContract.methods.stakingContract().call();
-  const stakingAuRaContract = new web3.eth.Contract([{"constant":true,"inputs":[],"name":"erc677TokenContract","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"stakingEpoch","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}], stakingAuRaAddress);
-  const stakingTokenAddress = await stakingAuRaContract.methods.erc677TokenContract().call();
-  const stakingEpoch = new BN(await stakingAuRaContract.methods.stakingEpoch().call());
-  if (stakingTokenAddress == '0x0000000000000000000000000000000000000000' && stakingEpoch.isZero()) {
-    // Deploy staking token contract and make initial stakes
-    const compiledContract = compileStakingTokenContract();
-    const abi = compiledContract.abi;
-    const bytecode = compiledContract.evm.bytecode.object;
-    const contract = new web3.eth.Contract(abi);
-    const netId = await web3.eth.getChainId();
-    const data = await contract
-      .deploy({
-          data: '0x' + bytecode,
-          arguments: ['STAKE', 'STAKE', 18, netId],
-      })
-      .encodeABI();
-    const ownerPrivateKey = fs.readFileSync(`${__dirname}/../keys/${ownerAddress}`, 'utf8');
-
-    const signedTx = await web3.eth.accounts.signTransaction({
-      data,
-      gasPrice: web3.utils.numberToHex('0'),
-      gas: web3.utils.numberToHex('4700000'),
-    }, `0x${ownerPrivateKey}`);
-
-    const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-
-    console.log(`Staking token contract is deployed and has the address ${receipt.contractAddress}`);
-  } else if (stakingTokenAddress != '0x0000000000000000000000000000000000000000') {
-    console.log('The staking token is already deployed, so we won\'t do any actions');
-  } else if (!stakingEpoch.isZero()) {
-    console.log('The number of the current staking epoch is not zero, so it is too late to make initial stakes');
-  }
-}
-
 async function main() {
   const externalIP = await publicIp.v4();
   const setEnvContent = fs.readFileSync(`${__dirname}/../scripts/set-env.sh`, 'utf8')
@@ -78,7 +38,7 @@ async function main() {
   delete spec.engine.authorityRound.params.blockGasLimitContractTransitions;
 
   // Correct existing options in spec
-  spec.genesis.gasLimit = '17000000';
+  spec.genesis.gasLimit = '30000000';
 
   // Add London hard fork options
   spec.params.eip1559Transition = "0";
@@ -319,4 +279,116 @@ function compileStakingTokenContract() {
   };
   let compiledContract = JSON.parse( solc.compile(JSON.stringify(input)) );
   return compiledContract.contracts['token.sol']['ERC677BridgeTokenRewardable'];
+}
+
+async function deployStakingToken(ownerAddress) {
+  let spec = fs.readFileSync(nodesSpecFilePath, 'utf8');
+  spec = JSON.parse(spec);
+  const validatorSetAuRaAddress = spec.engine.authorityRound.params.validators.multi["0"].contract;
+  const blockRewardAuRaAddress = spec.engine.authorityRound.params.blockRewardContractAddress;
+  const validatorSetAuRaContract = new web3.eth.Contract([{"constant":true,"inputs":[],"name":"stakingContract","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getValidators","outputs":[{"name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"}], validatorSetAuRaAddress);
+  const stakingAuRaAddress = await validatorSetAuRaContract.methods.stakingContract().call();
+  const stakingAuRaContract = new web3.eth.Contract([{"constant":true,"inputs":[],"name":"erc677TokenContract","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"stakingEpoch","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_erc677TokenContract","type":"address"}],"name":"setErc677TokenContract","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_totalAmount","type":"uint256"}],"name":"initialValidatorStake","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}], stakingAuRaAddress);
+  const stakingTokenAddress = await stakingAuRaContract.methods.erc677TokenContract().call();
+  const stakingEpoch = new BN(await stakingAuRaContract.methods.stakingEpoch().call());
+  const candidateMinStake = new BN(await stakingAuRaContract.methods.candidateMinStake().call());
+  if (stakingTokenAddress == '0x0000000000000000000000000000000000000000' && stakingEpoch.isZero()) {
+    // Deploy staking token contract and make initial stakes
+
+    const compiledContract = compileStakingTokenContract();
+    const abi = compiledContract.abi;
+    const bytecode = compiledContract.evm.bytecode.object;
+    const contract = new web3.eth.Contract(abi);
+    const netId = await web3.eth.getChainId();
+    const data = await contract
+      .deploy({
+          data: '0x' + bytecode,
+          arguments: ['STAKE', 'STAKE', 18, netId],
+      })
+      .encodeABI();
+    const ownerPrivateKey = fs.readFileSync(`${__dirname}/../keys/${ownerAddress}`, 'utf8');
+
+    let signedTx = await web3.eth.accounts.signTransaction({
+      data,
+      gasPrice: web3.utils.numberToHex('0'),
+      gas: web3.utils.numberToHex('4700000'),
+    }, `0x${ownerPrivateKey}`);
+    let receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+    console.log(`Staking token contract is deployed and has the address ${receipt.contractAddress}`);
+
+    // Call StakingTokenContract.setStakingContract()
+    const stakingTokenContract = new web3.eth.Contract([{"constant":false,"inputs":[{"name":"_stakingContract","type":"address"}],"name":"setStakingContract","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_blockRewardContract","type":"address"}],"name":"setBlockRewardContract","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}], receipt.contractAddress);
+    signedTx = await web3.eth.accounts.signTransaction({
+      data: stakingTokenContract.methods.setStakingContract(stakingAuRaAddress).encodeABI(),
+      gasPrice: web3.utils.numberToHex('0'),
+      gas: web3.utils.numberToHex('2000000'),
+    }, `0x${ownerPrivateKey}`);
+    receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+    if (receipt.status !== true) {
+      throw Error("Cannot call StakingTokenContract.setStakingContract() function");
+    } else {
+      console.log("StakingTokenContract.setStakingContract() was called successfully");
+    }
+
+    // Call StakingTokenContract.setBlockRewardContract()
+    signedTx = await web3.eth.accounts.signTransaction({
+      data: stakingTokenContract.methods.setBlockRewardContract(blockRewardAuRaAddress).encodeABI(),
+      gasPrice: web3.utils.numberToHex('0'),
+      gas: web3.utils.numberToHex('2000000'),
+    }, `0x${ownerPrivateKey}`);
+    receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+    if (receipt.status !== true) {
+      throw Error("Cannot call StakingTokenContract.setBlockRewardContract() function");
+    } else {
+      console.log("StakingTokenContract.setBlockRewardContract() was called successfully");
+    }
+
+    // Call StakingAuRa.setErc677TokenContract()
+    signedTx = await web3.eth.accounts.signTransaction({
+      data: stakingAuRaContract.methods.setErc677TokenContract(stakingTokenContract.options.address).encodeABI(),
+      gasPrice: web3.utils.numberToHex('0'),
+      gas: web3.utils.numberToHex('2000000'),
+    }, `0x${ownerPrivateKey}`);
+    receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+    if (receipt.status !== true) {
+      throw Error("Cannot call StakingAuRa.setErc677TokenContract() function");
+    } else {
+      console.log("StakingAuRa.setErc677TokenContract() was called successfully");
+    }
+
+    // Call StakingTokenContract.mint()
+    const miningAddresses = validatorSetAuRaContract.methods.getValidators().call();
+    const mintAmount = candidateMinStake.mul(new BN(miningAddresses.length));
+    signedTx = await web3.eth.accounts.signTransaction({
+      data: stakingTokenContract.methods.mint(stakingAuRaAddress, mintAmount).encodeABI(),
+      gasPrice: web3.utils.numberToHex('0'),
+      gas: web3.utils.numberToHex('2000000'),
+    }, `0x${ownerPrivateKey}`);
+    receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+    if (receipt.status !== true) {
+      throw Error("Cannot call StakingTokenContract.mint() function");
+    } else {
+      console.log("StakingTokenContract.mint() was called successfully");
+    }
+
+    // Call StakingAuRa.initialValidatorStake()
+    signedTx = await web3.eth.accounts.signTransaction({
+      data: stakingAuRaContract.methods.initialValidatorStake(mintAmount).encodeABI(),
+      gasPrice: web3.utils.numberToHex('0'),
+      gas: web3.utils.numberToHex('2000000'),
+    }, `0x${ownerPrivateKey}`);
+    receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+    if (receipt.status !== true) {
+      throw Error("Cannot call StakingAuRa.initialValidatorStake() function");
+    } else {
+      console.log("StakingAuRa.initialValidatorStake() was called successfully");
+    }
+
+    console.log('Initial stakes for validators were successfully set');
+  } else if (stakingTokenAddress != '0x0000000000000000000000000000000000000000') {
+    console.log('The staking token is already deployed, so we are skipping this step');
+  } else if (!stakingEpoch.isZero()) {
+    console.log('The number of the current staking epoch is not zero, so it is too late to make initial stakes. Skipping this step');
+  }
 }
