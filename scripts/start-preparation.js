@@ -361,7 +361,7 @@ async function deployStakingToken(ownerAddress) {
     }
 
     // Call StakingTokenContract.mint()
-    const miningAddresses = validatorSetAuRaContract.methods.getValidators().call();
+    const miningAddresses = await validatorSetAuRaContract.methods.getValidators().call();
     const mintAmount = candidateMinStake.mul(new BN(miningAddresses.length));
     signedTx = await web3.eth.accounts.signTransaction({
       to: stakingTokenContract.options.address,
