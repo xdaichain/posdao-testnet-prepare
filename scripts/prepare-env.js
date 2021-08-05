@@ -27,6 +27,9 @@ async function main() {
   const ownerBalance = (process.env.OWNER_BALANCE || "100").trim(); // default is 100 * 10**18 wei
   const delegatorMinStake = (process.env.DELEGATOR_MIN_STAKE || "200").trim(); // default is 200 * 10**18 wei
   const candidateMinStake = (process.env.CANDIDATE_MIN_STAKE || "2000").trim(); // default is 2000 * 10**18 wei
+  const stakingEpochDuration = (process.env.STAKING_EPOCH_DURATION || "120992").trim();
+  const stakeWithdrawDisallowPeriod = (process.env.STAKE_WITHDRAW_DISALLOW_PERIOD || "4332").trim();
+  const collectRoundLength = (process.env.COLLECT_ROUND_LENGTH || "76").trim();
   const validatorsNumber = process.env.VALIDATORS_NUMBER || 5;
 
   // Validate input parameters
@@ -50,8 +53,20 @@ async function main() {
   if (!candidateMinStakeTest || candidateMinStake == 0) {
     throw Error("Invalid CANDIDATE_MIN_STAKE. Must be positive integer");
   }
-  if (validatorsNumber <= 0 || validatorsNumber > 19) {
-    throw Error("Invalid VALIDATORS_NUMBER. Must be in the range 1...19");
+  const stakingEpochDurationTest = /^[0-9]+$/.test(stakingEpochDuration);
+  if (!stakingEpochDurationTest || stakingEpochDuration == 0) {
+    throw Error("Invalid STAKING_EPOCH_DURATION. Must be positive integer");
+  }
+  const stakeWithdrawDisallowPeriodTest = /^[0-9]+$/.test(stakeWithdrawDisallowPeriod);
+  if (!stakeWithdrawDisallowPeriodTest || stakeWithdrawDisallowPeriod == 0) {
+    throw Error("Invalid STAKE_WITHDRAW_DISALLOW_PERIOD. Must be positive integer");
+  }
+  const collectRoundLengthTest = /^[0-9]+$/.test(collectRoundLength);
+  if (!collectRoundLengthTest || collectRoundLength == 0) {
+    throw Error("Invalid COLLECT_ROUND_LENGTH. Must be positive integer");
+  }
+  if (validatorsNumber <= 0 || validatorsNumber > 21) {
+    throw Error("Invalid VALIDATORS_NUMBER. Must be in the range 1...21");
   }
 
   const keysDirectory = `${__dirname}/../keys`;
@@ -87,9 +102,9 @@ OWNER=${ownerAccount.address}
 OWNER_BALANCE=${ownerBalance}
 INITIAL_VALIDATORS=${initialValidators}
 STAKING_ADDRESSES=${stakingAddresses}
-STAKING_EPOCH_DURATION=120992
-STAKE_WITHDRAW_DISALLOW_PERIOD=4332
-COLLECT_ROUND_LENGTH=76
+STAKING_EPOCH_DURATION=${stakingEpochDuration}
+STAKE_WITHDRAW_DISALLOW_PERIOD=${stakeWithdrawDisallowPeriod}
+COLLECT_ROUND_LENGTH=${collectRoundLength}
 IS_TESTNET=true
 DELEGATOR_MIN_STAKE=${delegatorMinStake}
 CANDIDATE_MIN_STAKE=${candidateMinStake}
