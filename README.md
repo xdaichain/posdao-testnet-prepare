@@ -21,14 +21,14 @@ The setup assumes a few steps to run the testchain:
 - running the testchain from scratch
 - deploying staking token contract after the chain starts
 
-1. Clone this repository and go to the `compose` directory:
+`1.` Clone this repository and go to the `compose` directory:
 
 ```bash
 git clone https://github.com/xdaichain/posdao-testnet-prepare
 cd posdao-testnet-prepare/compose
 ```
 
-2. Configure environment variables before starting the preparation scripts.
+`2.` Configure environment variables before starting the preparation scripts.
 
 ```bash
 cp .env.example .env
@@ -48,7 +48,7 @@ The config parameters are (default values can be left as is):
 - `VALIDATORS_NUMBER` - the number of initial validators (up to 21 in the current version).
 - `SEQAPIKEY` - an API key for [Seq](https://datalust.co/seq) log collector. Used on Nethermind nodes to collect logs useful for debugging purposes.
 
-3. Run preparation scripts.
+`3.` Run preparation scripts.
 
 This step will create `nodes` subdirectory in the `compose` directory.
 
@@ -65,7 +65,7 @@ The appeared `nodes` directory will contain the following subdirectories and fil
 - `run_all.sh` - the script to run all nodes and Netstats dashboard (to up their docker containers).
 - `stop_all.sh` - the script to stop all nodes and Netstats dashboard (to down their docker containers).
 
-4. Start all nodes.
+`4.` Start all nodes.
 
 ```bash
 cd nodes
@@ -75,7 +75,7 @@ chmod +x run_all.sh
 
 This will create and start all docker containers.
 
-5. Deploy staking token contract and make initial stakes by validators.
+`5.` Deploy staking token contract and make initial stakes by validators.
 
 This step must be launched until the first staking epoch is finished.
 
@@ -84,7 +84,7 @@ cd .. # go back to the `compose` directory
 docker-compose start && docker-compose logs -f
 ```
 
-6. Get owner's address and private key.
+`6.` Get owner's address and private key.
 
 After the chain starts, only owner account will have positive balance in native coins. 
 
@@ -101,7 +101,7 @@ To get owner's private key:
 docker-compose start && docker exec testnetprep cat /testnet/keys/{OWNER_ADDRESS} # insert here the address got on the previous substep
 ```
 
-7. Try to view Netstats dashboard and connect to RPC:
+`7.` Try to view Netstats dashboard and connect to RPC:
 
 Netstat is available on `http://[EXTERNAL_IP]:3000`.
 RPC is available on `http://[EXTERNAL_IP]:8545`.
