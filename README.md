@@ -103,8 +103,9 @@ docker-compose start && docker exec testnetprep cat /testnet/keys/{OWNER_ADDRESS
 
 `7.` Try to view Netstats dashboard and connect to RPC:
 
-Netstat is available on `http://[EXTERNAL_IP]:3000`.
-RPC is available on `http://[EXTERNAL_IP]:8545`.
+Netstat is available on `http://[EXTERNAL_IP]:3000`
+RPC: `http://[EXTERNAL_IP]:8545`
+WebSocket: `ws://[EXTERNAL_IP]:8546/ws`
 
 ## Restarting nodes
 
