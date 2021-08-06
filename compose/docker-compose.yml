@@ -2,7 +2,7 @@ version: '3.7'
 services:
   testnetprep:
     init: true
-    image: xdaichain/posdao-testnet-prepare:latest
+    image: poanetwork/posdao-testnet-prepare:latest
     container_name: testnetprep
     environment:
       NETWORK_NAME: "${NETWORK_NAME}"
