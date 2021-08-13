@@ -147,10 +147,11 @@ services:
       NETHERMIND_SYNCCONFIG_DOWNLOADBODIESINFASTSYNC: "false"
       NETHERMIND_SYNCCONFIG_DOWNLOADRECEIPTSINFASTSYNC: "false"
 #    healthcheck:
-#      test: ["CMD", "sh", "-c", "curl -sf --connect-timeout 1 --max-time 2 --retry 2 --retry-delay 3 --retry-max-time 15 http://monitor >/dev/null || sh -c 'pkill -15 Nethermind.Runner && (sleep 10; pkill -9 Nethermind.Runner); exit 1'"]
-#      interval: 60s
+#      test: ["CMD", "sh", "-c", "curl -sf --connect-timeout 1 --max-time 2 --retry 2 --retry-delay 3 --retry-max-time 15 http://monitor:8080 >/dev/null || sh -c 'pkill -15 Nethermind.Runner && (sleep 10; pkill -9 Nethermind.Runner); exit 1'"]
+#      interval: 600s
 #      timeout: 30s
 #      start_period: 60s
+#      retries: 1
     volumes:
       - ../spec.json:/nethermind/spec.json:ro
       - ./data/logs:/nethermind/logs
@@ -172,6 +173,7 @@ services:
 #    environment:
 #      RPC: "${externalIP}:8545"
 #      MINING_ADDRESS: "${address}"
+#      VALIDATOR_SET_ADDRESS: "${spec.engine.authorityRound.params.validators.multi["0"].contract}"
 #    logging:
 #      driver: "json-file"
 #      options:
