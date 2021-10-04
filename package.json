@@ -9,7 +9,7 @@
     "make-spec": ". ./scripts/set-env.sh && cd ./posdao-contracts && npm i && node ./scripts/make_spec.js",
     "prepare-env": "node ./scripts/prepare-env.js",
     "start-preparation": "node ./scripts/start-preparation.js",
-    "cleanup": "rm -f ./scripts/set-env.sh ./posdao-contracts/spec.json && rm -rf ./keys ./nodes/* ./compose/nodes"
+    "cleanup": "rm -f ./scripts/set-env.sh ./posdao-contracts/spec.json && rm -rf ./keys ./nodes/* ./nodes ./compose/nodes"
   },
   "repository": {
     "type": "git",

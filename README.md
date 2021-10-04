@@ -2,7 +2,7 @@
 
 Preparation scripts and a launcher of POSDAO testchain. It runs validator nodes, archive/rpc node, and netstat dashboard on a single server in docker containers. The number of validator nodes is configurable.
 
-The setup is wrapped to docker image. The current version only uses Nethermind client to run the nodes.
+The setup is wrapped to docker image. The current version simultaneously uses Nethermind and OpenEthereum clients to run the nodes.
 
 ## Build
 
@@ -103,8 +103,8 @@ docker-compose start && docker exec testnetprep cat /testnet/keys/{OWNER_ADDRESS
 
 `7.` Try to view Netstats dashboard and connect to RPC:
 
-Netstat is available on `http://[EXTERNAL_IP]:3000`
-RPC: `http://[EXTERNAL_IP]:8545`
+Netstat is available on `http://[EXTERNAL_IP]:3000`<br />
+RPC: `http://[EXTERNAL_IP]:8545`<br />
 WebSocket: `ws://[EXTERNAL_IP]:8546/ws`
 
 ## Restarting nodes

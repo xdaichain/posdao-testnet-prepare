@@ -24,7 +24,7 @@ async function main() {
 
   const networkName = (process.env.NETWORK_NAME || "xdaitestnet").trim();
   const networkId = (process.env.NETWORK_ID || "102").trim();
-  const ownerBalance = (process.env.OWNER_BALANCE || "100").trim(); // default is 100 * 10**18 wei
+  const ownerBalance = (process.env.OWNER_BALANCE || "1000000").trim(); // default is 1000000 * 10**18 wei
   const delegatorMinStake = (process.env.DELEGATOR_MIN_STAKE || "200").trim(); // default is 200 * 10**18 wei
   const candidateMinStake = (process.env.CANDIDATE_MIN_STAKE || "2000").trim(); // default is 2000 * 10**18 wei
   const stakingEpochDuration = (process.env.STAKING_EPOCH_DURATION || "120992").trim();
@@ -87,9 +87,11 @@ async function main() {
     const stakingKey = generatePrivateKey();
     const miningAccount = web3.eth.accounts.privateKeyToAccount(miningKey);
     const stakingAccount = web3.eth.accounts.privateKeyToAccount(stakingKey);
+    const miningKeyJson = web3.eth.accounts.encrypt(`0x${miningKey}`, 'testnetpoa');
     initialValidators.push(miningAccount.address);
     stakingAddresses.push(stakingAccount.address);
     fs.writeFileSync(`${keysDirectory}/${miningAccount.address}`, miningKey, 'utf8');
+    fs.writeFileSync(`${keysDirectory}/${miningAccount.address}.json`, JSON.stringify(miningKeyJson), 'utf8');
     fs.writeFileSync(`${keysDirectory}/${stakingAccount.address}`, stakingKey, 'utf8');
   }
 
