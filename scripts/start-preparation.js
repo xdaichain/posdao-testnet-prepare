@@ -67,6 +67,7 @@ async function main() {
   fs.writeFileSync(nodesSpecFilePath, JSON.stringify(spec, null, '  '), 'utf8');
 
   const OPENETHEREUM_IMAGE = 'xdaichain/openethereum:v3.3.0-rc.9';
+  const NETHERMIND_IMAGE = 'nethermindeth/nethermind:psb';
 
   // Prepare docker-compose.yml for Netstat
   const ETHSTATS_SECRET = pwdgen.generate({ length: 10, numbers: true });
@@ -189,7 +190,7 @@ services:
   nethermind:
     init: true
     container_name: ${networkName}-validator${n+1}
-    image: nethermind/nethermind:latest
+    image: ${NETHERMIND_IMAGE}
 #    links:
 #      - "monitor"
     environment:
@@ -213,7 +214,7 @@ services:
       NETHERMIND_MININGCONFIG_TARGETBLOCKGASLIMIT: "${spec.genesis.gasLimit}"
       NETHERMIND_NETWORKCONFIG_DISCOVERYPORT: 3030${n+1}
       NETHERMIND_NETWORKCONFIG_P2PPORT: 3030${n+1}
-      NETHERMIND_PRUNINGCONFIG_ENABLED: "false"
+      NETHERMIND_PRUNINGCONFIG_ENABLED: "true"
       NETHERMIND_SEQCONFIG_MINLEVEL: "Info"
       NETHERMIND_SEQCONFIG_SERVERURL: "https://seq.nethermind.io"
       NETHERMIND_SEQCONFIG_APIKEY: "${process.env.SEQAPIKEY}"
@@ -275,7 +276,7 @@ services:
   nethermind:
     init: true
     container_name: ${networkName}-archive
-    image: nethermind/nethermind:latest
+    image: ${NETHERMIND_IMAGE}
     environment:
       NETHERMIND_AURACONFIG_ALLOWAURAPRIVATECHAINS: "true"
       NETHERMIND_ETHSTATSCONFIG_ENABLED: "true"
@@ -335,7 +336,7 @@ services:
   const runAllShContent = `
 #!/bin/bash
 docker pull swarmpit/ethstats:latest
-docker pull nethermind/nethermind:latest
+docker pull ${NETHERMIND_IMAGE}
 docker pull ${OPENETHEREUM_IMAGE}
 docker pull xdaichain/ethstats-agent:latest
 cd ./ethstats; docker-compose up -d; cd -
