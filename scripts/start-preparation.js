@@ -128,6 +128,7 @@ services:
     command:
       --chain="/root/spec.json"
       --nat="extip:${externalIP}"
+      --port=3030${n+1}
       --base-path=/root/data
       --max-peers=100
       --unlock="${address}"
