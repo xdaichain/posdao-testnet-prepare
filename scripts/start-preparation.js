@@ -103,6 +103,7 @@ services:
   for (let n = 0; n < miningAddresses.length; n++) {
     const address = miningAddresses[n];
     const privateKey = fs.readFileSync(`${__dirname}/../keys/${address}`, 'utf8');
+    const privateKeyJson = fs.readFileSync(`${__dirname}/../keys/${address}.json`, 'utf8');
 
     const nodeDirectory = `${nodesDirectory}/validator${n+1}`;
     try {
@@ -115,6 +116,7 @@ services:
 
     if (n % 2 == 0) {
       fs.writeFileSync(`${nodeDirectory}/password`, 'testnetpoa', 'utf8');
+      fs.writeFileSync(`${nodeDirectory}/key.json`, privateKeyJson, 'utf8');
       nodeYmlContent = `
 version: '3.7'
 services:
@@ -130,7 +132,7 @@ services:
       --max-peers=100
       --unlock="${address}"
       --password="/root/password"
-      --node-key=${privateKey}
+      --node-key="${privateKey}"
       --min-gas-price=1000000000
       --gas-floor-target=${spec.genesis.gasLimit}
       --engine-signer="${address}"
@@ -146,7 +148,7 @@ services:
       - ../spec.json:/root/spec.json:ro
       - ./data:/root/data
       - ./password:/root/password
-      - ../../keys/${address}.json:/root/data/keys/${networkName}/key
+      - ./key.json:/root/data/keys/${networkName}/key:ro
     expose:
       - "8545"
     ports:
